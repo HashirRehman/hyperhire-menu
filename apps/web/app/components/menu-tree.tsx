@@ -1,66 +1,111 @@
-'use client'
-
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react'
-import { useState } from 'react'
-import { MenuItem } from '../../types/menu'
+import React, { useState } from 'react';
+import { MenuItem } from "../../types/menu";
+import { MdAdd, MdChevronRight, MdExpandMore } from 'react-icons/md';
 
 interface MenuTreeProps {
-  items: MenuItem[]
-  onSelect: (item: MenuItem) => void
-  onAddItem: (parentId?: string) => void
-  expandedItems: Set<string>
-  onToggle: (id: string) => void
+  items: MenuItem[];
+  expandedItems: Set<string>;
+  onToggle: (id: string) => void;
+  onSelect: (item: MenuItem | null) => void;
+  onAddItem: (name: string, parentId?: string) => void;
+  level?: number;
+  children?: React.ReactNode; // Ensure this is optional and correctly typed
 }
 
-export function MenuTree({
-  items,
-  onSelect,
-  onAddItem,
-  expandedItems,
-  onToggle,
-}: MenuTreeProps) {
-  const renderItem = (item: MenuItem) => {
-    const hasChildren = item.children && item.children.length > 0
-    const isExpanded = expandedItems.has(item.id)
+
+export const MenuTree = ({ items, expandedItems, onToggle, onSelect, onAddItem, level = 0, children }: MenuTreeProps) => {
+  const [addingToParentId, setAddingToParentId] = useState<string | null>(null);
+
+  const buildTree = (items: MenuItem[]): MenuItem[] => {
+    if (!items || items.length === 0) {
+      return [];
+    }
+
+    const itemMap = new Map<string, MenuItem>();
+    const roots: MenuItem[] = [];
+
+    items.forEach(item => {
+      itemMap.set(item.id, { ...item, children: [] });
+    });
+
+    items.forEach(item => {
+      if (item.parentId) {
+        const parent = itemMap.get(item.parentId);
+        if (parent && parent.children) {
+          parent.children.push(itemMap.get(item.id)!);
+        }
+      } else {
+        roots.push(itemMap.get(item.id)!);
+      }
+    });
+
+    return roots;
+  };
+
+  const handleAddItem = (parentId?: string) => {
+    const newItemName = parentId ? prompt("Enter new item name:") : "New Root Item";
+    if (newItemName) {
+      onAddItem(newItemName.trim(), parentId);
+    }
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const isExpanded = expandedItems.has(item.id);
+    const hasChildren = item.children && item.children.length > 0;
 
     return (
-      <div key={item.id} className="ml-4 md:ml-6">
-        <div className="flex items-center gap-1">
+      <li key={item.id} className="relative">
+        {level > 0 && (
+          <div
+            className="absolute -left-4 top-3 h-px w-4 bg-gray-200"
+            aria-hidden="true"
+          />
+        )}
+
+        <div className="group flex items-center gap-1 rounded-md py-1 pl-1 hover:bg-gray-100">
           <button
             onClick={() => hasChildren && onToggle(item.id)}
-            className="p-2 hover:bg-gray-100 rounded md:p-1"
+            className={`flex h-4 w-4 items-center justify-center rounded hover:bg-gray-200 ${!hasChildren && 'invisible'}`}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
-            {hasChildren && (
-              <>
-                {isExpanded ? (
-                  <ChevronDown className="h-5 w-5 text-gray-500 md:h-4 md:w-4" />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-gray-500 md:h-4 md:w-4" />
-                )}
-              </>
+            {isExpanded ? (
+              <MdExpandMore className="h-3 w-3" />
+            ) : (
+              <MdChevronRight className="h-3 w-3" />
             )}
           </button>
+
           <button
             onClick={() => onSelect(item)}
-            className="flex-1 rounded px-2 py-2 text-left hover:bg-gray-100 md:py-1"
+            className="flex-1 truncate text-left text-sm"
           >
             {item.name}
           </button>
+
           <button
-            onClick={() => onAddItem(item.id)}
-            className="rounded p-2 text-blue-500 hover:bg-blue-50 md:p-1"
+            onClick={() => handleAddItem(item.id)}
+            className="invisible mr-2 rounded-full p-0.5 hover:bg-gray-200 group-hover:visible"
+            aria-label={`Add item under ${item.name}`}
           >
-            <Plus className="h-5 w-5 md:h-4 md:w-4" />
+            <MdAdd className="h-3 w-3" />
           </button>
         </div>
-        {hasChildren && isExpanded && (
-          <div className="border-l border-gray-200">
-            {item.children?.map((child) => renderItem(child))}
-          </div>
-        )}
-      </div>
-    )
-  }
 
-  return <div className="mt-4">{items.map((item) => renderItem(item))}</div>
-}
+        {isExpanded && hasChildren && (
+          <ul className="border-l border-gray-200 ml-4 pl-4 space-y-0.5">
+            {item.children!.map(child => renderMenuItem(child))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  const treeItems = buildTree(items);
+
+  return (
+    <ul className={`space-y-0.5 ${level > 0 ? 'border-l border-gray-200 ml-4 pl-4' : ''}`}>
+      {treeItems.map(item => renderMenuItem(item))}
+      {children}
+    </ul>
+  );
+};
