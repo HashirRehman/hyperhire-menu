@@ -1,12 +1,13 @@
 import { MenuItem } from "../../types/menu"
 
 interface DetailsPanelProps {
-  item?: MenuItem
-  onSave: () => void
+  item: MenuItem | null;
 }
 
-export function DetailsPanel({ item, onSave }: DetailsPanelProps) {
-  if (!item) return null
+export const DetailsPanel: React.FC<DetailsPanelProps> = ({ item }) => {
+  if (!item) {
+    return <div>No item selected</div>;
+  }
 
   return (
     <div className="space-y-4 p-4 md:space-y-6 md:p-6">
@@ -47,12 +48,6 @@ export function DetailsPanel({ item, onSave }: DetailsPanelProps) {
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
-      <button
-        onClick={onSave}
-        className="w-full rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      >
-        Save
-      </button>
     </div>
   )
 }

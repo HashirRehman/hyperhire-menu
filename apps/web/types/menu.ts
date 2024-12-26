@@ -1,9 +1,9 @@
 export interface MenuItem {
-  id: string
-  name: string
-  children?: MenuItem[]
-  depth: number
-  parentId?: string
+  id: string;
+  name: string;
+  parentId?: string;
+  children?: MenuItem[];
+  depth: number;  // Use depth instead of level
 }
 
 export interface MenuState {
@@ -11,4 +11,3 @@ export interface MenuState {
   expandedItems: Set<string>
   items: MenuItem[]
 }
-
