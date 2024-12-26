@@ -3,22 +3,22 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [apiResponse, setApiResponse] = useState<string>("");
+  const [apiResponse, setApiResponse] = useState<Record<string, string>>();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}`);
-        const text = await response.text();
-        setApiResponse(text);
+        const text = await response.json();
+        console.log("Response Text", text)
+        setApiResponse(text[0]);
       } catch (error) {
         console.error('Error fetching data:', error);
-        setApiResponse('Error loading data');
       }
     };
 
     fetchData();
   }, []);
 
-  return <h1 className="border rounded text-red-900">{apiResponse}</h1>;
+  return <h1 className="border rounded text-red-900">{apiResponse?.name} {apiResponse?.email}</h1>;
 }
