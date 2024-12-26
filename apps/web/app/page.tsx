@@ -20,7 +20,7 @@ const addMenu = async (menu: { name: string; parentId?: string }) => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/menus`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(menu),
+    body: JSON.stringify(menu)
   });
   return response.json();
 };
